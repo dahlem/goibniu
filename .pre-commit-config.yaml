@@ -1,0 +1,24 @@
+repos:
+  - repo: local
+    hooks:
+      - id: goibniu-adr
+        name: Goibniu ADR compliance
+        entry: goibniu
+        args: ["check-compliance", "--root", "."]
+        language: system
+        pass_filenames: false
+        stages: [commit]
+      - id: goibniu-api
+        name: Goibniu API compliance
+        entry: goibniu
+        args: ["check-api", "--root", ".", "--specdir", ".ai-context/contracts"]
+        language: system
+        pass_filenames: false
+        stages: [commit]
+      - id: goibniu-generate
+        name: Goibniu generate design context
+        entry: goibniu
+        args: ["generate-docs", "--root", ".", "--out", ".ai-context"]
+        language: system
+        pass_filenames: false
+        stages: [push]

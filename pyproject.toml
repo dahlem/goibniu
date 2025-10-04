@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "goibniu"
+version = "0.3.14"
+description = "AI-aware architecture governance and documentation system"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "pydantic",
+    "pyyaml",
+    "click",
+    "uvicorn",
+    "networkx",
+    "starlette"
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pytest",
+    "isort",
+    "pre-commit",
+    "httpx",
+]
+all = ["goibniu[dev]"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/goibniu"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+exclude = [ 
+    ".bzr", ".direnv", ".eggs", ".git", ".git-rewrite", ".hg", ".mypy_cache", ".nox", ".pants.d", ".pytype", ".ruff_cache", ".svn", ".tox", ".venv", "__pypackages__", "_build", "buck-out", "build", "dist", "node_modules", "venv",
+]
+
+[tool.ruff.lint]
+select = [ "E", "F", "I", "B", "C90", "N", "D", "UP", "ANN", "SIM", "TD",]
+ignore = [ "E501", "ANN401", "ANN003", "ANN001", "ANN201", "ANN202", "ANN002", "D100", "D101", "D102", "D103", "D104", "D105", "D107", "C901", "N806", "N812", "N803", "D417", "ANN206",]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.isort]
+known-first-party = [ "goibniu",]
+
+[project.scripts]
+goibniu = "goibniu.cli.__main__:main"

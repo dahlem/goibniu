@@ -1,0 +1,24 @@
+name: Goibniu CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Goibniu
+        run: pip install -e .
+      - name: Generate docs for example service
+        run: goibniu generate-docs --root examples/example_service --out .ai-context
+      - name: Run tests
+        run: |
+          pip install pytest
+          pytest -q
+      - name: ADR Compliance (repo-wide)
+        run: goibniu check-compliance --root .
+      - name: Bootstrap agent (playbook + capabilities)
+        run: goibniu bootstrap-agent --base .
+      - name: API compliance
+        run: goibniu check-api --root . --specdir .ai-context/contracts

@@ -1,0 +1,12 @@
+{
+  "name": "adr_guard_agent",
+  "role": "Enforce ADRs",
+  "goals": [
+    "load ADRs",
+    "check rules",
+    "generate RFE"
+  ],
+  "blocking_conditions": [
+    "ADR violations detected"
+  ]
+}

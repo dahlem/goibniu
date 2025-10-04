@@ -1,0 +1,11 @@
+{
+  "name": "system_planner_agent",
+  "role": "Assess design impact",
+  "goals": [
+    "map change",
+    "integration points"
+  ],
+  "blocking_conditions": [
+    "API contract missing"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "implementation_agent",
+  "role": "Plan and implement",
+  "goals": [
+    "plan changes",
+    "update tests"
+  ],
+  "blocking_conditions": [
+    "ADR conflict unresolved"
+  ]
+}
