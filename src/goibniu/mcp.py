@@ -30,22 +30,15 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from .playbook import build_capabilities
 
 
-def _serve_text_from_repo_or_package(path_from_base: Path, package_resource: tuple[str, str]):
-    """Try a repo file first; else read from installed package resources.
-
-    package_resource = ("goibniu.prompts", "design_review.md") or ("goibniu.personas", "adr_semantic_auditor.json").
-
-    """
-    if path_from_base.exists():
-        return FileResponse(str(path_from_base))
-    pkg, name = package_resource
+def _serve_text_repo_or_pkg(repo_path: Path, package: str, filename: str):
+    if repo_path.exists():
+        return FileResponse(str(repo_path))
     try:
-        data = resources.files(pkg).joinpath(name).read_text(encoding="utf-8")
-        # Decide media type based on suffix
-        media = "application/json" if name.endswith(".json") else "text/markdown"
+        data = resources.files(package).joinpath(filename).read_text(encoding="utf-8")
+        media = "text/markdown" if filename.endswith(".md") else "application/json"
         return PlainTextResponse(data, media_type=media)
     except Exception as e:
-        raise HTTPException(404, f"{name} not found") from e
+        raise HTTPException(404, f"{filename} not found") from e
 
 
 def create_app(base: str = '.') -> FastAPI:
@@ -205,7 +198,7 @@ def create_app(base: str = '.') -> FastAPI:
 
         """
         repo_path = base_path / f'src/goibniu/prompts/{name}.md'
-        return _serve_text_from_repo_or_package(repo_path, ("goibniu.prompts", f"{name}.md"))
+        return _serve_text_repo_or_pkg(repo_path, ("goibniu.prompts", f"{name}.md"))
 
     @app.get('/mcp/personas/{name}')
     def personas(name: str):
@@ -222,6 +215,16 @@ def create_app(base: str = '.') -> FastAPI:
 
         """
         repo_path = base_path / f'src/goibniu/personas/{name}.json'
-        return _serve_text_from_repo_or_package(repo_path, ("goibniu.personas", f"{name}.json"))
+        return _serve_text_repo_or_pkg(repo_path, ("goibniu.personas", f"{name}.json"))
+
+    @app.get("/mcp/agent_profiles")
+    def list_agent_profiles():
+        # Minimal static list; expand if you ship more profiles
+        return JSONResponse({"agent_profiles": ["agent_profile_goibniu"]})
+
+    @app.get("/mcp/agent_profiles/{name}")
+    def get_agent_profile(name: str):
+        repo = base_path / f"agent_interface/{name}.md"  # repo-root override
+        return _serve_text_repo_or_pkg(repo, "goibniu.agent_interface", f"{name}.md")
 
     return app

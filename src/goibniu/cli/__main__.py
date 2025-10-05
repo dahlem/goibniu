@@ -117,7 +117,8 @@ def init_cmd(root, out, pre_commit, ci, adr, overwrite, skip_docs, dry_run):
 
 @main.command("bootstrap-agent")
 @click.option("--base", default=".", help="Repo root")
-def bootstrap_agent(base):
+@click.option("--profile-name", default="agent_profile_goibniu.md", help="Profile filename override")
+def bootstrap_agent(base, profile_name):
     """Create playbook, onboarding, and capability catalog.
 
     Generates all files needed for AI agent onboarding:
@@ -128,7 +129,7 @@ def bootstrap_agent(base):
 
     """
     from goibniu.agent_bootstrap import bootstrap_agent_files
-    out = bootstrap_agent_files(base=base)
+    out = bootstrap_agent_files(base=base, profile_name=profile_name)
     click.echo("✅ Bootstrapped agent files:")
     for k,v in out.items():
         click.echo(f" - {k}: {v}")

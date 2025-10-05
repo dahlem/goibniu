@@ -184,7 +184,8 @@ def build_capabilities(root: Path) -> dict:
     """
     prompts_dir = root / "src/goibniu/prompts"
     personas_dir = root / "src/goibniu/personas"
-
+    profiles_repo = root / "agent_interface"  # repo-root overrides
+    
     # Build capability catalog
     caps = {
         "cli": [
@@ -207,11 +208,12 @@ def build_capabilities(root: Path) -> dict:
             "/mcp/prompts", "/mcp/prompts/{name}",
             "/mcp/personas", "/mcp/personas/{name}",
             "/mcp/playbook",
-            "/mcp/capabilities"
+            "/mcp/capabilities",
+            "/mcp/agent_profiles", "/mcp/agent_profiles/{name}"
         ],
-        # Discover available prompts and personas
         "prompts": sorted([p.stem for p in prompts_dir.glob("*.md")]) if prompts_dir.exists() else [],
-        "personas": sorted([p.stem for p in personas_dir.glob("*.json")]) if personas_dir.exists() else []
+        "personas": sorted([p.stem for p in personas_dir.glob("*.json")]) if personas_dir.exists() else [],
+        "agent_profiles": sorted([p.stem for p in profiles_repo.glob("*.md")]) or ["agent_profile_goibniu"]
     }
     return caps
 

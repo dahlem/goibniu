@@ -133,7 +133,7 @@ goibniu init --dry-run
 **Why?** Agents need to know *when* to look up design, *when* to check ADRs, and
 *when* to stop and request human review.
 
-Create a **queriable playbook** + onboarding files:
+1. Create a **queriable playbook** + onboarding files:
 
 ```bash
 goibniu bootstrap-agent --base .
@@ -146,13 +146,24 @@ This generates:
 * `.ai-context/goibniu/capabilities.json` (CLI, MCP, prompts, personas)
 * `AGENT_ONBOARDING.md` (agent-friendly quickstart)
 
-Give your assistant the contents of `AGENT_ONBOARDING.md` as its **system profile** and let it call
+2. Give your assistant the contents of `AGENT_ONBOARDING.md` as its **system profile** and let it call
 
 - `/mcp/capabilities` and `/mcp/playbook` first
 - Then `/mcp/system`, `/mcp/components/*`, `/mcp/apis/*`, `/mcp/adrs`
 - Use `prompts/personas` from `/mcp/prompts/*` and `/mcp/personas/*`
 
+3. **Optional override**: To customize the onboarding text for this repo, add:
+ `agent_interface/agent_profile_goibniu.md`
+ 
+ Then re-run `goibniu bootstrap-agent`. The override will be used automatically.
+
+
 ---
+
+That's it — you now have a robust **default onboarding** (packaged) with a
+**simple repo‑root override** for teams that want local customization, and
+agents can fetch the same profile via **MCP**.
+
 
 ## ADRs: how to create and enforce
 
