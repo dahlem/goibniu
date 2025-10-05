@@ -22,6 +22,32 @@ from .playbook import (
     write_playbook_yaml,
 )
 
+ONBOARDING_MD = """# Agent Onboarding (Goibniu)
+You are operating in a Goibniu-governed repository.
+
+## Always start here
+- GET /mcp/capabilities
+- GET /mcp/playbook
+
+## Protocol (from Playbook)
+1) Discover → read .ai-context/system.yaml, components, contracts
+2) Plan → use prompts: design_review, implementation_planner
+3) Check → deterministic (goibniu check-compliance, goibniu check-api)
+           → semantic ADR audit (prompt: adr_semantic_compliance; persona: adr_semantic_auditor)
+           → STOP & RFE if violations or confidence ≥ 0.6
+4) Implement → only after checks pass or RFE approved
+5) Document & PR → impact summary; link ADRs/RFEs; CI green
+
+## MCP you must consult
+- /mcp/system, /mcp/components/{name}, /mcp/apis/{name}, /mcp/adrs
+- /mcp/prompts/{name}: design_review, implementation_planner, adr_semantic_compliance
+- /mcp/personas/{name}: system_planner_agent, implementation_agent, adr_semantic_auditor
+
+## Definition of Done
+- Affected components/APIs named; plan explicit
+- Deterministic checks pass; semantic audit JSON shows no violations or approved RFE
+- Tests + OpenAPI updated; CI green; .ai-context/ refreshed and committed
+"""
 
 def bootstrap_agent_files(base: str = ".") -> dict:
     """Bootstrap all agent onboarding files in a project.
@@ -58,19 +84,7 @@ def bootstrap_agent_files(base: str = ".") -> dict:
 
     # Create quick-start onboarding document
     onboarding = base_path / "AGENT_ONBOARDING.md"
-    onboarding.write_text("""# Agent Onboarding (Goibniu)
-Read first: docs/goibniu_playbook.md
-Query MCP:
-- /mcp/playbook
-- /mcp/capabilities
-- /mcp/system
-- /mcp/prompts/design_review
-Before coding:
-- goibniu check-compliance
-- goibniu check-api
-If conflicts:
-- goibniu generate-rfe <ADR-ID> "<short reason>" (await approval)
-""")
+    onboarding.write_text(ONBOARDING_MD)
 
     # Return paths to all created files
     return {

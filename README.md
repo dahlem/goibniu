@@ -79,7 +79,7 @@ review gates), while agents become **reliable, context‑aware collaborators**.
 
 ## Quick start (maintainer's checklist)
 
-> Requires Python **3.9+**.
+> Requires Python **3.12+**.
 
 ```bash
 # 1) Install Goibniu in this repo (dev mode recommended)
@@ -296,41 +296,6 @@ pre-commit run --all-files
   reviewers share the same truth)
 * `.pre-commit-config.yaml`, `.github/workflows/*`
 * `AGENT_ONBOARDING.md`, `docs/goibniu_playbook.md` (from `bootstrap-agent`)
-
----
-
-## Example ADR rule (copy/paste)
-
-````md
-# ADR-0001: Avoid use of eval()
-
-## Status
-Accepted
-
-## Context
-Using `eval()` can be dangerous and should be avoided.
-
-## Decision
-We will not use Python's `eval()` in application code.
-
-## Consequences
-- Positive: Safer execution
-- Negative: May need alternatives for dynamic behavior
-
-## Rule (optional)
-```yaml
-goibniu_rule:
-  id: ADR-0001
-  description: Avoid python eval() in application code
-  patterns:
-    any: ["eval("]
-    all: []
-  paths:
-    include: ["**/*.py"]
-    exclude: ["tests/**"]
-````
-
-```
 
 ---
 

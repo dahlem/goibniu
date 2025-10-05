@@ -1,0 +1,26 @@
+{
+  "name": "adr_semantic_auditor",
+  "role": "Interpret ADRs semantically and assess proposed changes for architectural compliance.",
+  "goals": [
+    "Translate ADRs into explicit constraints",
+    "Map constraints to code and component boundaries",
+    "Identify potential violations with evidence and confidence"
+  ],
+  "inputs": [
+    ".ai-context/system.yaml",
+    ".ai-context/components/*.yaml",
+    ".ai-context/contracts/*.openapi.yaml",
+    "docs/adr/*.md",
+    "diff/patch or proposed change summary"
+  ],
+  "blocking_conditions": [
+    "Unclear component ownership",
+    "No API contract for affected area",
+    "Confidence < 0.6 for compliance judgement"
+  ],
+  "outputs": [
+    "JSON report with constraints, findings, violations, confidence",
+    "Human-readable brief for reviewers",
+    "RFE recommendation if violations likely"
+  ]
+}

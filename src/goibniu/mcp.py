@@ -21,12 +21,31 @@ or file downloads.
 __authors__ = ["Dominik Dahlem"]
 __status__ = "Development"
 
+from importlib import resources
+
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 
 from .playbook import build_capabilities
+
+
+def _serve_text_from_repo_or_package(path_from_base: Path, package_resource: tuple[str, str]):
+    """
+    Try a repo file first; else read from installed package resources.
+    package_resource = ("goibniu.prompts", "design_review.md") or ("goibniu.personas", "adr_semantic_auditor.json")
+    """
+    if path_from_base.exists():
+        return FileResponse(str(path_from_base))
+    pkg, name = package_resource
+    try:
+        data = resources.files(pkg).joinpath(name).read_text(encoding="utf-8")
+        # Decide media type based on suffix
+        media = "application/json" if name.endswith(".json") else "text/markdown"
+        return PlainTextResponse(data, media_type=media)
+    except Exception:
+        raise HTTPException(404, f"{name} not found")
 
 
 def create_app(base: str = '.') -> FastAPI:
@@ -185,10 +204,8 @@ def create_app(base: str = '.') -> FastAPI:
             HTTPException: 404 if prompt not found
 
         """
-        f = base_path / f'src/goibniu/prompts/{name}.md'
-        if not f.exists():
-            raise HTTPException(404, f'{name} prompt not found')
-        return FileResponse(str(f))
+        repo_path = base_path / f'src/goibniu/prompts/{name}.md'
+        return _serve_text_from_repo_or_package(repo_path, ("goibniu.prompts", f"{name}.md"))
 
     @app.get('/mcp/personas/{name}')
     def personas(name: str):
@@ -204,9 +221,7 @@ def create_app(base: str = '.') -> FastAPI:
             HTTPException: 404 if persona not found
 
         """
-        f = base_path / f'src/goibniu/personas/{name}.json'
-        if not f.exists():
-            raise HTTPException(404, f'{name} persona not found')
-        return FileResponse(str(f))
+        repo_path = base_path / f'src/goibniu/personas/{name}.json'
+        return _serve_text_from_repo_or_package(repo_path, ("goibniu.personas", f"{name}.json"))
 
     return app

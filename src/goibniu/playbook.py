@@ -31,7 +31,9 @@ This playbook defines the protocol for design-aware, ADR-compliant implementatio
 ## Protocol (High-Level)
 1) **Discover**: Load `.ai-context/system.yaml`, component files, and API specs.
 2) **Plan**: Use prompts (`design_review`, `implementation_planner`) to produce an impact note and plan.
-3) **Check**: Run ADR and API compliance. If conflicts: STOP and create an RFE.
+3) **Check** — Perform **both**:
+   - **Deterministic checks**: Run ADR and API compliance. If conflicts: STOP and create an RFE.
+   - **Semantic ADR Audit (LLM-assisted)**: interpret ADRs, derive constraints, assess compliance on the proposed change
 4) **Implement**: Only after checks pass or RFE approved. Update tests + OpenAPI.
 5) **Document & PR**: Summarize impact; link ADRs/RFEs; ensure CI green.
 
@@ -40,6 +42,37 @@ This playbook defines the protocol for design-aware, ADR-compliant implementatio
 - Before any HTTP call: `/mcp/apis/{service}` + `goibniu check-api`
 - Before coding: `/mcp/adrs` + `goibniu check-compliance`
 - On conflict: generate RFE, await human approval
+
+## Semantic ADR Audit (LLM-Assisted Protocol)
+
+**When:** After deterministic checks (ADR/API) and **before** any coding.
+
+**Inputs**  
+- System: `.ai-context/system.yaml`  
+- Components: `.ai-context/components/*.yaml`  
+- API specs: `.ai-context/contracts/*.openapi.yaml`  
+- ADRs: `docs/adr/*.md`  
+- Proposed change: diff/patch or change summary  
+- Prompt: `/mcp/prompts/adr_semantic_compliance`  
+- Persona: `/mcp/personas/adr_semantic_auditor`
+
+**Steps**  
+1. Extract constraints from ADRs (natural language + structured schema).  
+2. Map constraints to affected components/files.  
+3. Assess compliance heuristically (imports, call sites, layering, ownership, API usage).  
+4. Produce a **JSON first** report:  
+   - `constraints`: derived constraints with ADR source  
+   - `findings`: evidence (files/lines/snippets)  
+   - `violations`: suspected violations, severity, confidence [0..1], rationale  
+   - `rfe`: `{required: bool, title?, reason?, adr_ids?}`  
+5. Print a short human‑readable brief after the JSON.  
+
+**Stop Conditions**  
+- If any violation has `confidence >= 0.6`, set `rfe.required = true` and **STOP** implementation; file an RFE.
+
+**Success/Acceptance**  
+- Constraints & evidence are explicit.  
+- Either no violations or an RFE exists and is approved.
 
 ## Guardrails (stop conditions)
 - ADR violations (until RFE approved)
@@ -56,10 +89,37 @@ This playbook defines the protocol for design-aware, ADR-compliant implementatio
 PLAYBOOK_YAML = {
   "protocol": ["discover", "plan", "check", "implement", "document_pr"],
   "consult_mcp": {
-    "start": ["/mcp/playbook", "/mcp/system", "/mcp/prompts/design_review", "/mcp/personas/system_planner_agent"],
+    "start": [
+      "/mcp/playbook",
+      "/mcp/system",
+      "/mcp/prompts/design_review",
+      "/mcp/personas/system_planner_agent"
+    ],
     "before_http": ["/mcp/apis/{service}", "goibniu check-api"],
     "before_code": ["/mcp/adrs", "goibniu check-compliance"],
     "on_conflict": ["goibniu generate-rfe <ADR-ID> '<reason>'"]
+  },
+  "semantic_adr_audit": {
+    "when": "after deterministic checks and before coding",
+    "endpoints": [
+      "/mcp/adrs",
+      "/mcp/system",
+      "/mcp/components/*",
+      "/mcp/apis/*",
+      "/mcp/prompts/adr_semantic_compliance",
+      "/mcp/personas/adr_semantic_auditor"
+    ],
+    "input": ["diff|patch|change_summary"],
+    "output_contract": {
+      "constraints": "list of derived constraints with ADR sources",
+      "findings": "evidence (files/lines/snippets) per constraint_id",
+      "violations": "list with severity, confidence [0..1], rationale, impacted_files",
+      "rfe": "{required: bool, title?: string, reason?: string, adr_ids?: [string]}"
+    },
+    "stop_on": {
+      "rfe_required": True,
+      "min_confidence": 0.6
+    }
   },
   "guardrails": ["adr_violation", "unknown_endpoint", "cross_layer_violation"],
   "acceptance_criteria": [
