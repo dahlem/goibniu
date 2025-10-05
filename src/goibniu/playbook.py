@@ -196,7 +196,8 @@ def build_capabilities(root: Path) -> dict:
             "goibniu bootstrap-agent",
             "goibniu capabilities",
             "goibniu list-prompts",
-            "goibniu prompt <name>"
+            "goibniu prompt <name>",
+            "goibniu init"
         ],
         "mcp": [
             "/mcp/system",

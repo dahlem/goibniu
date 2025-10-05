@@ -34,6 +34,87 @@ def main():
 
     """
 
+@main.command("init")
+@click.option("--root", default=".", help="Repository root to analyze for docs generation")
+@click.option("--out", default=".ai-context", help="Output directory for design context")
+@click.option("--pre-commit/--no-pre-commit", default=False, help="Create .pre-commit-config.yaml stub")
+@click.option("--ci/--no-ci", default=False, help="Create GitHub Actions CI stub")
+@click.option("--adr", default=None, help="Create an initial ADR with given title")
+@click.option("--overwrite/--no-overwrite", default=False, help="Overwrite existing files if present")
+@click.option("--skip-docs/--no-skip-docs", default=False, help="Skip generating .ai-context/ design docs")
+@click.option("--dry-run/--no-dry-run", default=False, help="Print actions without writing files")
+def init_cmd(root, out, pre_commit, ci, adr, overwrite, skip_docs, dry_run):
+    """Initialize a repository with Goibniu.
+
+    - Generate design context (.ai-context/)
+    - Bootstrap agent artifacts (playbook + onboarding)
+    - (Optional) drop pre-commit and CI stubs
+    - (Optional) create a first ADR
+
+    """
+    from pathlib import Path
+
+    import click
+
+    from goibniu import adr as adrmod
+    from goibniu import api, component, system
+    from goibniu.agent_bootstrap import bootstrap_agent_files
+    from goibniu.scaffold import write_ci_workflow, write_pre_commit
+
+    root_path = Path(root)
+    actions = []
+
+    if not skip_docs:
+        actions.append(f"generate-docs --root {root} --out {out}")
+    actions.append("bootstrap-agent --base .")
+    if adr:
+        actions.append(f"bootstrap-adr '{adr}'")
+    if pre_commit:
+        actions.append("write .pre-commit-config.yaml")
+    if ci:
+        actions.append("write .github/workflows/goibniu-ci.yml")
+
+    click.echo("Goibniu init plan:")
+    for a in actions:
+        click.echo(f" - {a}")
+
+    if dry_run:
+        click.echo("Dry run complete. No changes made.")
+        return
+
+    # 1) Generate docs (unless skipped)
+    if not skip_docs:
+        out_path = Path(out)
+        out_path.mkdir(parents=True, exist_ok=True)
+        sys_data = system.analyze_system(root)
+        system.export_system_yaml(out_path / "system.yaml", sys_data)
+        comp_data = component.analyze_components(root)
+        component.export_components(out_path / "components", comp_data)
+        apis = api.extract_api_docs(root)
+        api.export_openapi(out_path / "contracts", apis, title=f"API for {root_path.name}")
+        click.echo(f"✅ Generated design context in {out}/")
+
+    # 2) Bootstrap agent artifacts
+    res = bootstrap_agent_files(base=".")
+    click.echo("✅ Bootstrapped agent artifacts:")
+    for k, v in res.items():
+        click.echo(f"   - {k}: {v}")
+
+    # 3) Optional ADR
+    if adr:
+        path = adrmod.bootstrap_adr(adr, status="Proposed")
+        click.echo(f"📝 Created ADR: {path}")
+
+    # 4) Optional stubs
+    if pre_commit:
+        ok, msg = write_pre_commit(base=".", overwrite=overwrite)
+        click.echo(("✅ " if ok else "ℹ️  ") + msg)
+    if ci:
+        ok, msg = write_ci_workflow(base=".", overwrite=overwrite)
+        click.echo(("✅ " if ok else "ℹ️  ") + msg)
+
+    click.echo("🎉 Goibniu init complete.")
+
 @main.command("bootstrap-agent")
 @click.option("--base", default=".", help="Repo root")
 def bootstrap_agent(base):

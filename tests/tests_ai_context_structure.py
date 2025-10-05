@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 def test_ai_context_structure_exists():
     root = Path(".")
     assert (root / ".ai-context/system.yaml").exists(), "Missing .ai-context/system.yaml"

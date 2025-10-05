@@ -22,7 +22,6 @@ __authors__ = ["Dominik Dahlem"]
 __status__ = "Development"
 
 from importlib import resources
-
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -32,9 +31,10 @@ from .playbook import build_capabilities
 
 
 def _serve_text_from_repo_or_package(path_from_base: Path, package_resource: tuple[str, str]):
-    """
-    Try a repo file first; else read from installed package resources.
-    package_resource = ("goibniu.prompts", "design_review.md") or ("goibniu.personas", "adr_semantic_auditor.json")
+    """Try a repo file first; else read from installed package resources.
+
+    package_resource = ("goibniu.prompts", "design_review.md") or ("goibniu.personas", "adr_semantic_auditor.json").
+
     """
     if path_from_base.exists():
         return FileResponse(str(path_from_base))
@@ -44,8 +44,8 @@ def _serve_text_from_repo_or_package(path_from_base: Path, package_resource: tup
         # Decide media type based on suffix
         media = "application/json" if name.endswith(".json") else "text/markdown"
         return PlainTextResponse(data, media_type=media)
-    except Exception:
-        raise HTTPException(404, f"{name} not found")
+    except Exception as e:
+        raise HTTPException(404, f"{name} not found") from e
 
 
 def create_app(base: str = '.') -> FastAPI:

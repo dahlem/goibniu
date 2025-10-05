@@ -98,6 +98,34 @@ goibniu check-api --root . --specdir .ai-context/contracts
 goibniu start-mcp --base . --host 0.0.0.0 --port 8000
 ```
 
+
+### One‑shot bootstrap (optional stubs via flags)
+
+```bash
+# Base bootstrap (docs + playbook + onboarding)
+goibniu init
+
+# With pre-commit & CI stubs:
+goibniu init --pre-commit --ci
+
+# Create an initial ADR at the same time:
+goibniu init --adr "Use FastAPI for internal APIs"
+
+# Overwrite stubs if they already exist:
+goibniu init --pre-commit --ci --overwrite
+
+# Skip docs generation (if already run) or dry-run to preview:
+goibniu init --skip-docs
+goibniu init --dry-run
+```
+
+### Why optional flags?
+
+- Some teams prefer to manage **pre‑commit** and **CI workflows** centrally;
+  making them optional avoids conflicts.
+- Others adopt Goibniu incrementally: start with design + playbook, then turn on
+  hooks when the team is ready.
+
 ---
 
 ## The playbook and agent onboarding
@@ -118,12 +146,11 @@ This generates:
 * `.ai-context/goibniu/capabilities.json` (CLI, MCP, prompts, personas)
 * `AGENT_ONBOARDING.md` (agent-friendly quickstart)
 
-**Agents should:**
+Give your assistant the contents of `AGENT_ONBOARDING.md` as its **system profile** and let it call
 
-1. Query `/mcp/capabilities` and `/mcp/playbook` (understand tools & guardrails)
-2. Read `/mcp/system`, `/mcp/prompts/design_review`
-3. Run `check-compliance` & `check-api`
-4. If an ADR is at risk: **STOP**, `generate-rfe`, wait for human approval
+- `/mcp/capabilities` and `/mcp/playbook` first
+- Then `/mcp/system`, `/mcp/components/*`, `/mcp/apis/*`, `/mcp/adrs`
+- Use `prompts/personas` from `/mcp/prompts/*` and `/mcp/personas/*`
 
 ---
 
